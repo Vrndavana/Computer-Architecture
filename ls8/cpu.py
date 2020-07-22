@@ -1,8 +1,6 @@
 """CPU functionality."""
 
 import sys
-# print(sys.argv)
-# sys.exit(0)
 
 class CPU:
     """Main CPU class."""
@@ -14,7 +12,11 @@ class CPU:
         self.reg = [0] * 8
         self.HLT = 0b00000001
         self.MUL = 0b10100010
+        self.PUSH = 0b01000101
+        self.POP = 0b01000110
         self.address = 0
+        self.sp = 7  # stack pointer is always register 7
+        
 
     def load(self):
         """Load a program into memory."""
@@ -32,37 +34,16 @@ class CPU:
                 except ValueError:
                     pass
 
-        # address = 0
-
-        # For now, we've just hardcoded a program:
-
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010, # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111, # PRN R0
-        #     0b00000000,
-        #     0b00000001, # HLT
-        # ]
-
-        # for instruction in program:
-        #     self.ram[address] = instruction
-        #     address += 1
-
-
-    def alu(self, op, reg_a, reg_b):
+    def alu(self, op, operand_a, operand_b):
         """ALU operations."""
 
         if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
+            self.reg[operand_a] += self.reg[operand_b]
         elif op == self.MUL:
-            self.reg[reg_a] *= self.reg[reg_b]
+            self.reg[operand_a] *= self.reg[operand_b]
         #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
-
-
 
     def ram_read(self, address=None):
         v = self.ram[address]
@@ -71,7 +52,6 @@ class CPU:
     def ram_write(self, value=None, address=None):
         self.ram[address] = value
         
-
     def trace(self):
         """
         Handy function to print out the CPU state. You might want to call this
@@ -107,12 +87,24 @@ class CPU:
             elif IR == 0b01000111:  # PRN instruction
                 print(self.reg[operand_a])
                 self.pc += 2
-            elif IR == self.HLT:
+            elif IR == self.HLT:   # Halt
                 running = False
             elif IR == self.MUL:
                 # self.reg[operand_a] *= self.reg[operand_b]
                 self.alu(IR, operand_a, operand_b)
                 self.pc += 3
+            elif IR == self.PUSH:
+                self.push(operand_a, operand_b)
+            elif IR == self.POP:
+                self.pop(operand_a, operand_b)
             else:
                 print(f"Unknown instruction {IR}")
                 running = False  
+    def push(self, operand_a, operand_b):
+        self.sp -= 1
+        self.ram_write(self.sp, self.reg[operand_a])
+        self.pc += 2
+    def pop(self, operand_a, operand_b):
+        self.reg[operand_a] = self.ram_read(self.sp)
+        self.sp += 1
+        self.pc += 2
