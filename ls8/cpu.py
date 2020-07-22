@@ -25,12 +25,9 @@ class CPU:
             for line in f:
                 try:
                     line = line.strip().split("#",1)[0]
-                    # if line == '':
-                    #     continue
                     line = int(line, 2)
                     self.ram[self.address] = line
                     self.address += 1
-                    # print(line)
                 except ValueError:
                     pass
 
@@ -41,7 +38,6 @@ class CPU:
             self.reg[operand_a] += self.reg[operand_b]
         elif op == self.MUL:
             self.reg[operand_a] *= self.reg[operand_b]
-        #elif op == "SUB": etc
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -60,8 +56,6 @@ class CPU:
 
         print(f"TRACE: %02X | %02X %02X %02X |" % (
             self.pc,
-            #self.fl,
-            #self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
             self.ram_read(self.pc + 2)
