@@ -45,9 +45,12 @@ class CPU:
         v = self.ram[address]
         return v
 
-    def ram_write(self, value=None, address=None):
-        self.ram[address] = value
-        
+    # WRONG
+    # def ram_write(self, value=None, address=None):
+    #     self.ram[address] = value
+    #  VVVVVV This one is the right VVVV
+    def ram_write(self, mar, mdr):
+        self.ram[mar] = mdr    
     def trace(self):
         """
         Handy function to print out the CPU state. You might want to call this
@@ -95,10 +98,16 @@ class CPU:
                 print(f"Unknown instruction {IR}")
                 running = False  
     def push(self, operand_a, operand_b):
+        print('push')
+        self.trace()
         self.sp -= 1
         self.ram_write(self.sp, self.reg[operand_a])
         self.pc += 2
+        self.trace()
     def pop(self, operand_a, operand_b):
+        # print('pop')
+        # self.trace()
         self.reg[operand_a] = self.ram_read(self.sp)
         self.sp += 1
         self.pc += 2
+        # self.trace()
