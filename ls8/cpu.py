@@ -15,13 +15,17 @@ class CPU:
         self.PUSH = 0b01000101
         self.POP = 0b01000110
         self.address = 0
+        self.ADD = 0b10100000
+        self.CALL = 0b01010000
+        self.RET = 0b00010001
         self.sp = 7  # stack pointer is always register 7
         
 
-    def load(self):
+    def load(self, file=None):
         """Load a program into memory."""
-
-        with open(sys.argv[1]) as f:
+        if file==None:
+            file=sys.argv[1]
+        with open(file) as f:
             for line in f:
                 try:
                     line = line.strip().split("#",1)[0]
@@ -36,6 +40,7 @@ class CPU:
 
         if op == "ADD":
             self.reg[operand_a] += self.reg[operand_b]
+            self.pc += 3
         elif op == self.MUL:
             self.reg[operand_a] *= self.reg[operand_b]
         else:
@@ -45,12 +50,14 @@ class CPU:
         v = self.ram[address]
         return v
 
-    # WRONG
-    # def ram_write(self, value=None, address=None):
-    #     self.ram[address] = value
-    #  VVVVVV This one is the right VVVV
-    def ram_write(self, mar, mdr):
-        self.ram[mar] = mdr    
+    # Needed to switch address and value to the correct places 
+    def ram_write(self, address=None, value=None):
+        self.ram[address] = value
+   
+    #  This is the same as above 
+    # def ram_write(self, mar, mdr):
+    #     self.ram[mar] = mdr  
+
     def trace(self):
         """
         Handy function to print out the CPU state. You might want to call this
@@ -84,6 +91,9 @@ class CPU:
             elif IR == 0b01000111:  # PRN instruction
                 print(self.reg[operand_a])
                 self.pc += 2
+            elif IR == self.ADD:
+                op = "ADD"
+                self.alu(op, operand_a, operand_b)
             elif IR == self.HLT:   # Halt
                 running = False
             elif IR == self.MUL:
@@ -94,6 +104,10 @@ class CPU:
                 self.push(operand_a, operand_b)
             elif IR == self.POP:
                 self.pop(operand_a, operand_b)
+            elif IR == self.CALL:
+                self.call(operand_a, operand_b)
+            elif IR == self.RET:
+                self.ret(operand_a, operand_b)
             else:
                 print(f"Unknown instruction {IR}")
                 running = False  
@@ -111,3 +125,10 @@ class CPU:
         self.sp += 1
         self.pc += 2
         # self.trace()
+    def call(self, operand_a, operand_b):
+        self.sp -= 1
+        self.ram_write(self.sp, self.pc + 2)
+        self.pc = self.reg[operand_a]
+    def ret(self, operand_a, operand_b):
+        self.pc = self.ram_read(self.sp)
+        self.sp += 1
